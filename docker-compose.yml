@@ -1,0 +1,11 @@
+services:
+  passgen:
+    image: passgen:latest
+    container_name: passgen
+    restart: unless-stopped
+    networks:
+      - public_net
+
+networks:
+  public_net:
+    external: true
