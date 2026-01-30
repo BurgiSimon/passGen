@@ -55,11 +55,24 @@ import lockSvg from '/lock.svg'
 </template>
 
 <style scoped>
+@import '@/fonts/tanker/css/tanker.css';
+@import '@/fonts/satoshi/css/satoshi.css';
+
 .page-container {
   min-height: 100vh;
   width: 100%;
   background-color: #0a0a0a;
   position: relative;
+  font-family: 'Satoshi-Variable', sans-serif;
+}
+
+.page-container h1,
+.page-container h2,
+.page-container h3,
+.page-container h4,
+.page-container h5,
+.page-container h6 {
+  font-family: 'Tanker-Regular', sans-serif;
 }
 
 .logo-container {

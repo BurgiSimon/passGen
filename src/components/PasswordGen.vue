@@ -204,10 +204,12 @@ generatePassword()
   max-width: 28rem;
   margin: 0 auto;
   padding: 1.5rem;
+  font-weight: 600;
 }
 
 .title {
   color: #ffffff;
+  font-family: 'Tanker-Regular', sans-serif;
 }
 
 /* Glass panel base style */
