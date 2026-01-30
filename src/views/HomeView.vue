@@ -1,10 +1,39 @@
 <script setup>
 import PasswordGen from '@/components/PasswordGen.vue'
 import DotGrid from '@/components/DotGrid.vue'
+import MetallicPaint from '@/components/MetallicPaint.vue'
+import lockSvg from '/lock.svg'
 </script>
 
 <template>
   <div class="page-container">
+    <!-- Logo top-left with metallic effect -->
+    <div class="logo-container">
+      <MetallicPaint
+        :image-src="lockSvg"
+        :seed="42"
+        :scale="4"
+        :pattern-sharpness="1"
+        :noise-scale="0.5"
+        :speed="0.3"
+        :liquid="0.75"
+        :mouse-animation="false"
+        :brightness="2"
+        :contrast="0.5"
+        :refraction="0.01"
+        :blur="0.015"
+        :chromatic-spread="2"
+        :fresnel="1"
+        :angle="0"
+        :wave-amplitude="1"
+        :distortion="1"
+        :contour="0.2"
+        light-color="#ffffff"
+        dark-color="#000000"
+        tint-color="#27FF64"
+      />
+    </div>
+
     <!-- Background - outside of main flex container -->
     <DotGrid
       :dot-size="2"
@@ -31,6 +60,15 @@ import DotGrid from '@/components/DotGrid.vue'
   width: 100%;
   background-color: #0a0a0a;
   position: relative;
+}
+
+.logo-container {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: 4rem;
+  height: 4rem;
+  z-index: 20;
 }
 
 .dot-grid-bg {
