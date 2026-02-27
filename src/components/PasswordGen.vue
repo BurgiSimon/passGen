@@ -21,12 +21,14 @@ const loadPreferences = () => {
   const special = getCookie('pg_special')
   const noNumFirstLast = getCookie('pg_noNumFirstLast')
   const length = getCookie('pg_length')
+  const copy = getCookie('pg_copyOnGen')
 
   if (uppercase !== null) includeUppercase.value = uppercase === 'true'
   if (numbers !== null) includeNumbers.value = numbers === 'true'
   if (special !== null) includeSpecialChars.value = special === 'true'
   if (noNumFirstLast !== null) noNumberFirstLast.value = noNumFirstLast === 'true'
   if (length !== null) passwordLength.value = parseInt(length, 10)
+  if (copy !== null) copyOnGen.value = copy === 'true' 
 }
 
 // Save preferences to cookies
@@ -36,6 +38,7 @@ const savePreferences = () => {
   setCookie('pg_special', includeSpecialChars.value)
   setCookie('pg_noNumFirstLast', noNumberFirstLast.value)
   setCookie('pg_length', passwordLength.value)
+  setCookie('pg_copyOnGen', copyOnGen.value)
 }
 
 // Options
@@ -44,10 +47,11 @@ const includeNumbers = ref(true)
 const includeSpecialChars = ref(false)
 const noNumberFirstLast = ref(true)
 const passwordLength = ref(16)
+const copyOnGen = ref(true) 
 
 // Watch for option changes and save to cookies
 watch(
-  [includeUppercase, includeNumbers, includeSpecialChars, noNumberFirstLast, passwordLength],
+  [includeUppercase, includeNumbers, includeSpecialChars, noNumberFirstLast, passwordLength, copyOnGen],
   savePreferences,
 )
 
@@ -78,6 +82,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  generatePassword()
   window.removeEventListener('keydown', handleKeydown)
 })
 
@@ -140,6 +145,10 @@ const generatePassword = () => {
   }
 
   password.value = newPassword
+
+  if (copyOnGen.value) {
+    copyToClipboard()
+  }
 }
 
 // Copy to clipboard
@@ -158,8 +167,6 @@ const copyToClipboard = async () => {
   }
 }
 
-// Generate initial password
-generatePassword()
 // Auto-regenerate password when length changes
 watch(passwordLength, generatePassword)
 </script>
@@ -223,6 +230,11 @@ watch(passwordLength, generatePassword)
         <label class="checkbox-label">
           <input v-model="noNumberFirstLast" type="checkbox" class="checkbox-input" />
           <span>First & Last Character Can't Be a Number</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input v-model="copyOnGen" type="checkbox" class="checkbox-input" />
+          <span>Copy Password on Generation</span>
         </label>
       </div>
     </div>
