@@ -63,7 +63,7 @@ const handleKeydown = (e) => {
     generatePassword()
   }
 
-  if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
+  if (e.key === 'c' ) {
     if (password.value) {
       e.preventDefault()
       copyToClipboard()
@@ -173,9 +173,9 @@ watch(passwordLength, generatePassword)
       <DecryptedText
         :key="password"
         :text="password || 'Click Generate'"
-        :speed="30"
-        :max-iterations="15"
-        :sequential="true"
+        :speed="10"
+        :max-iterations="10"
+        :sequential="false"
         reveal-direction="start"
         animate-on="view"
         class="password-text"

@@ -36,14 +36,14 @@ import lockSvg from '/lock.svg'
 
     <!-- Background - outside of main flex container -->
     <DotGrid
-      :dot-size="1"
+      :dot-size="1.5"
       :gap="30"
       base-color="#27FF64"
       active-color="#27FF64"
-      :proximity="150"
+      :proximity="75"
       :speed-trigger="100"
-      :shock-radius="250"
-      :shock-strength="5"
+      :shock-radius="125"
+      :shock-strength="2.5"
       class="dot-grid-bg"
     />
 
