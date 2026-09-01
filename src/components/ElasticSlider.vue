@@ -70,7 +70,7 @@
       </div>
     </div>
 
-    <p class="absolute text-gray-400 transform -translate-y-6 font-medium tracking-wide">
+    <p class="absolute select-none text-gray-400 transform -translate-y-6 font-medium tracking-wide">
       {{ Math.round(value) }}
     </p>
   </div>

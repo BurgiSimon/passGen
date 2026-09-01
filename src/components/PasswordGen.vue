@@ -241,6 +241,7 @@ watch(passwordLength, generatePassword)
 .title {
   color: #ffffff;
   font-family: 'Tanker-Regular', sans-serif;
+  user-select: none;
 }
 
 /* Glass panel base style */
@@ -309,6 +310,7 @@ watch(passwordLength, generatePassword)
     0 0 0 1px hsla(142, 100%, 58%, 0.4) inset,
     0 8px 32px hsla(0, 0%, 0%, 0.2);
   transition: all 0.3s ease;
+  user-select: none;
 }
 
 .glass-button:hover {
@@ -332,6 +334,7 @@ watch(passwordLength, generatePassword)
   font-weight: 500;
   color: #ffffff;
   margin-bottom: 0.5rem;
+  user-select: none;
 }
 
 /* Checkbox group */
@@ -348,6 +351,7 @@ watch(passwordLength, generatePassword)
   cursor: pointer;
   color: hsla(0, 0%, 100%, 0.9);
   transition: color 0.2s ease;
+  user-select: none;
 }
 
 .checkbox-label:hover {
