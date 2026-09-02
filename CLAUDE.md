@@ -14,13 +14,19 @@ There are **two skins** over the same generator, picked with the button in the t
 ## Commands
 
 ```bash
-bun run dev       # Start dev server (localhost:5173)
-bun run build     # Production build to /dist
-bun run preview   # Preview production build
-bun run format    # Format with Prettier
+bun run dev                 # Dev server (localhost:5173)
+bun run build               # Production build to /dist
+bun run preview             # Serve /dist with Vite — files only, no 404/cache rules
+bun run format              # Prettier over src/
+PORT=3000 bun server.js     # Serve /dist the way production actually does
 ```
 
-Docker: `docker compose up -d` (serves on port 3000)
+Set `SITE_URL` on any build whose output will be deployed or audited:
+`SITE_URL=https://… bun run build`. Unset, it warns and bakes in a placeholder.
+
+`docker-compose.yml` is the author's deployment: a prebuilt `passgen:latest` on an
+external `public_net`, with no `ports:` and no `build:`. It does **not** work on a
+fresh clone — the README carries a self-contained compose file for that case.
 
 ## Architecture
 
@@ -79,21 +85,39 @@ Docker: `docker compose up -d` (serves on port 3000)
 bun src/lib/passwordCore.check.mjs   # assert-based, no framework
 ```
 
+**Audit the production build, never the dev server.** A Lighthouse run against `bun run dev`
+reports Vite's unbundled modules as multi-megabyte unminified JavaScript and attributes forced
+reflows and non-composited animations to `vite-plugin-vue-devtools`, none of which exist in
+`dist`. Every performance and SEO number in this file was measured like this:
+
+```bash
+SITE_URL=http://localhost:8099 bun run build
+PORT=8099 bun server.js &
+CHROME_PATH=<a chromium binary> bunx lighthouse http://localhost:8099/ \
+  --only-categories=performance --preset=desktop \
+  --chrome-flags="--headless=new --no-sandbox"
+```
+
 ## Key Conventions
 
 - All components use `<script setup>` with Composition API
 - Props defined with TypeScript interfaces via `withDefaults(defineProps<...>())`
 - Styling: design tokens in `src/style.css` (`--bg`, `--surface`, `--fg`, `--fg-dim`, `--border`, `--accent`, `--font-mono`, `--step`), consumed as `var(...)` in scoped CSS. Accent is `#27FF64`.
-- Monospace throughout via the native `ui-monospace` stack — no webfont, no `@font-face`
-- Zero `border-radius`. Never remove the global `:focus-visible` outline
+- **Terminal skin only:** monospace via the native `ui-monospace` stack — no webfont, no
+  `@font-face`. The glass skin is the exception and loads Satoshi and Tanker.
+- Zero `border-radius` — terminal skin only; the glass panels are rounded. Never remove the
+  global `:focus-visible` outline, in either skin.
 - Grid/flex children that can hold a long password need `min-width: 0`, or min-content width blows out the layout on narrow viewports
-- The history row in `HomeView` has a fixed height (`--history-h`), not `auto`. An `auto` row grows with its contents and pushes the password up every time an entry lands; the list scrolls inside the reserved box instead.
+- The history row in `TerminalView` has a fixed height (`--history-h`), not `auto`. An `auto` row grows with its contents and pushes the password up every time an entry lands; the list scrolls inside the reserved box instead.
 - Formatting: no semicolons, single quotes, 100 char print width (see `.prettierrc.json`)
 - Path alias: `@/` maps to `./src/`
 
 ## Production
 
 `server.js` is a Bun HTTP server that serves `/dist`. The Dockerfile uses multi-stage Bun builds.
+
+It listens on `Number(process.env.PORT) || 80`. The default is what the container wants; binding 80
+locally needs root, so use `PORT=3000 bun server.js` when checking production behaviour by hand.
 
 Unknown paths return the `index.html` body with **status 404**, not 200. The router has exactly one
 route, so every other URL is genuinely not a page and a 200 there would tell crawlers an unbounded
