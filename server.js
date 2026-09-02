@@ -1,6 +1,7 @@
 import { join, resolve } from 'path'
 
-const PORT = 80
+// 80 in the container; override locally, where binding 80 needs root.
+const PORT = Number(process.env.PORT) || 80
 const DIST_DIR = './dist'
 const DIST_ROOT = resolve(DIST_DIR)
 
