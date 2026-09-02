@@ -29,7 +29,8 @@ Docker: `docker compose up -d` (serves on port 3000)
 - **`src/components/PasswordOutput.vue`** — password hero, entropy meter, copy/generate buttons, and the glyph-cascade reveal animation (one self-terminating rAF loop, no library).
 - **`src/components/PasswordControls.vue`** — mode switch, native `<input type=range>`, native radios and checkboxes styled as `[x]` / `[ ]`.
 - **`src/components/PasswordHistory.vue`** — the session history list.
-- **`src/components/AnimatedList.vue`** — vue-bits AnimatedList, ported and restyled. Depends on `motion-v`. Deviations from upstream are commented in the file: a scoped slot (upstream hardcodes a `<p>`, which cannot hold a button), no Tab hijacking, reduced-motion support, and gradients that recompute when the item count changes rather than only on scroll.
+- **`src/components/AnimatedList.vue`** — vue-bits AnimatedList, ported and restyled. **No dependency**: upstream's per-row `motion-v` `useInView` is replaced by one shared `IntersectionObserver` plus a CSS transition, same 0.7→1 scale and 0→1 fade. Other deviations, all commented in the file: a scoped slot (upstream hardcodes a `<p>`, which cannot hold a button), no Tab hijacking, reduced-motion support, and gradients that recompute on item change rather than only on scroll.
+  In-view state is keyed by **item value, not index** — the consumer prepends, so index 0 means a different row after every generate, and an index-keyed flag makes the new row inherit the old one's "visible" state and skip its entrance. The `v-for` key matches, so items must be unique.
 
 ### Behavior that must not drift
 
