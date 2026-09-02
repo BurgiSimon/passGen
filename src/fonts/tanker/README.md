@@ -1,16 +1,21 @@
 # Installing Webfonts
+
 Follow these simple Steps.
 
 ## 1.
+
 Put `tanker/` Folder into a Folder called `fonts/`.
 
 ## 2.
+
 Put `tanker.css` into your `css/` Folder.
 
 ## 3. (Optional)
+
 You may adapt the `url('path')` in `tanker.css` depends on your Website Filesystem.
 
 ## 4.
+
 Import `tanker.css` at the top of you main Stylesheet.
 
 ```
@@ -18,9 +23,10 @@ Import `tanker.css` at the top of you main Stylesheet.
 ```
 
 ## 5.
+
 You are now ready to use the following Rule in your CSS to specify the Font Style:
+
 ```
 font-family: Tanker-Regular;
 
 ```
-

@@ -1,1 +1,93 @@
 @import 'tailwindcss';
+
+/* Tokens. Plain names are the source of truth — components read them via var().
+   light-dark() resolves against the element's own color-scheme, so the two
+   [data-theme] rules below are the entire theme switch: no media query, no
+   duplicated palette to drift, and 'system' is simply the absence of a pin.
+   Neon green is 1.2:1 on paper, so light gets its own accent, not a tint.
+   Contrast on the page background — dark: fg 16.2:1, fg-dim 4.8:1, accent 14.7:1;
+   light: fg 17.3:1, fg-dim 5.8:1, accent 6.1:1. All pass WCAG AA for body text. */
+:root {
+  color-scheme: light dark;
+
+  --bg: light-dark(#f4f4f0, #0a0a0a);
+  --surface: light-dark(#ffffff, #101010);
+  --fg: light-dark(#101010, #e8e8e8);
+  --fg-dim: light-dark(#5f5f5f, #7d7d7d);
+  --border: light-dark(#d4d4cc, #262626);
+  --accent: light-dark(#0a6b28, #27ff64);
+  --accent-dim: light-dark(rgb(10 107 40 / 0.16), rgb(39 255 100 / 0.2));
+  --vignette: light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.6));
+  --grid-line: light-dark(rgb(0 0 0 / 0.045), rgb(255 255 255 / 0.05));
+
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+  --step: 8px;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* Same tokens as Tailwind utilities (bg-surface, text-fg-dim, border-border...).
+   `inline` means Tailwind emits var(--x) directly instead of a second copy. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-fg-dim: var(--fg-dim);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus is the only decoration we never take away. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
