@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import ElasticSlider from './ElasticSlider.vue'
 import DecryptedText from './DecryptedText.vue'
 import { usePasswordGen } from '@/composables/usePasswordGen'
@@ -27,6 +28,15 @@ const {
   generatePassword,
   copyToClipboard,
 } = usePasswordGen()
+
+// Clearing the list while the panel is open would leave the reserved slot
+// holding an expanded, invisible panel — collapse it on the way out.
+const historyOpen = ref(false)
+
+const clearAndCollapse = () => {
+  clearHistory()
+  historyOpen.value = false
+}
 
 const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space' }
 </script>
@@ -146,15 +156,23 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
       </div>
 
       <!-- Session history — in memory only, gone when the tab closes.
-           Collapsed by default: <details> keeps the toggle native, so it stays
-           keyboard-operable and needs no open/closed state of our own. -->
-      <details v-if="history.length" class="glass-panel history">
+           Collapsed by default; <details> keeps the toggle native and
+           keyboard-operable. Always rendered, only hidden while empty: a v-if
+           here would pop the panel in after the first generate and shove the
+           whole (vertically centred) column upwards. visibility:hidden keeps
+           the slot's height and takes its contents out of the tab order. -->
+      <details
+        class="glass-panel history"
+        :class="{ 'is-empty': !history.length }"
+        :open="historyOpen"
+        @toggle="historyOpen = $event.target.open"
+      >
         <summary class="history-summary">
           <span class="history-label">History ({{ history.length }}) — this session only</span>
           <span class="history-chevron" aria-hidden="true">▾</span>
         </summary>
         <div class="history-head">
-          <button type="button" class="clear-button" @click="clearHistory">Clear</button>
+          <button type="button" class="clear-button" @click="clearAndCollapse">Clear</button>
         </div>
         <ul class="history-list">
           <li v-for="entry in history" :key="entry">
@@ -172,12 +190,23 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 </template>
 
 <style scoped>
+/* Capped to the viewport (minus main's padding) and laid out as a column, so
+   the open history absorbs whatever room is left over and scrolls inside it.
+   Without the cap, expanding 10 entries makes the whole page scroll. */
 .password-gen {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 28rem;
+  max-height: calc(100dvh - 7rem);
   margin: 0 auto;
   padding: 1.5rem;
   font-weight: 600;
+}
+
+/* Everything but the history keeps its natural height. */
+.password-gen > *:not(.options-container) {
+  flex: none;
 }
 
 .title {
@@ -265,6 +294,11 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-height: 0;
+}
+
+.options-container > *:not(.history) {
+  flex: none;
 }
 
 .option-label {
@@ -360,6 +394,18 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 }
 
 /* History */
+.history {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.history.is-empty {
+  visibility: hidden;
+}
+
 .history-summary {
   display: flex;
   align-items: center;
@@ -418,6 +464,10 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 }
 
 .history-list {
+  /* Shrinks to the leftover space rather than a fixed height, so the panel
+     never pushes the column past the viewport. */
+  flex: 1 1 auto;
+  min-height: 3rem;
   max-height: 12rem;
   margin: 0.5rem 0 0;
   padding: 0;
