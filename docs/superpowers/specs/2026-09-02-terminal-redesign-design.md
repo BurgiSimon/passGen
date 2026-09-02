@@ -106,7 +106,7 @@ Terminal/brutalist. Not a skin over the glass UI — a different grammar.
 --border:  #262626   /* hairlines */
 --accent:  #27FF64
 --accent-dim: #27ff6433
---mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, monospace
+--font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, monospace
 --step: 8px          /* everything is a multiple */
 ```
 
@@ -132,7 +132,7 @@ Terminal/brutalist. Not a skin over the glass UI — a different grammar.
 
 - Desktop ≥900px: `grid-template-columns: minmax(0,1fr) 320px`. Hero left, controls right.
 - Below 900px: single column, hero first, controls below, footer legend stays.
-- Password type scales `clamp(1.375rem, 4.5vw, 2.75rem)`, `word-break: break-all`,
+- Password type scales `clamp(1.5rem, 4.2vw, 3.5rem)`, `word-break: break-all`,
   so a 24-char password never overflows on a 320px screen.
 - Hero fills available height on desktop; nothing scrolls at default settings.
 

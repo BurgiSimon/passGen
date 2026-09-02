@@ -1,106 +1,149 @@
 <script setup>
-import PasswordGen from '@/components/PasswordGen.vue'
-import DotGrid from '@/components/DotGrid.vue'
-import MetallicPaint from '@/components/MetallicPaint.vue'
-import lockSvg from '/lock.svg'
+import { usePasswordGen } from '@/composables/usePasswordGen'
+import PasswordOutput from '@/components/PasswordOutput.vue'
+import PasswordControls from '@/components/PasswordControls.vue'
+
+const {
+  password,
+  copied,
+  passwordLength,
+  includeUppercase,
+  includeNumbers,
+  includeSpecialChars,
+  noNumberFirstLast,
+  charPool,
+  generatePassword,
+  copyToClipboard,
+} = usePasswordGen()
 </script>
 
 <template>
-  <div class="page-container">
-    <!-- Logo top-left with metallic effect -->
-    <div class="logo-container">
-      <MetallicPaint
-        :image-src="lockSvg"
-        :seed="42"
-        :scale="4"
-        :pattern-sharpness="1"
-        :noise-scale="0.5"
-        :speed="0.3"
-        :liquid="0.75"
-        :mouse-animation="false"
-        :brightness="2"
-        :contrast="0.5"
-        :refraction="0.01"
-        :blur="0.015"
-        :chromatic-spread="2"
-        :fresnel="1"
-        :angle="0"
-        :wave-amplitude="1"
-        :distortion="1"
-        :contour="0.2"
-        light-color="#ffffff"
-        dark-color="#000000"
-        tint-color="#27FF64"
-      />
-    </div>
+  <!-- static texture: hairline grid + vignette, no canvas, no rAF -->
+  <div class="texture" aria-hidden="true"></div>
 
-    <!-- Background - outside of main flex container -->
-    <DotGrid
-      :dot-size="1.5"
-      :gap="30"
-      base-color="#27FF64"
-      active-color="#27FF64"
-      :proximity="75"
-      :speed-trigger="100"
-      :shock-radius="125"
-      :shock-strength="2.5"
-      class="dot-grid-bg"
-    />
+  <div class="shell">
+    <header class="bar">
+      <span class="brand">passgen</span>
+      <span class="source">crypto.getRandomValues</span>
+    </header>
 
-    <!-- Content -->
-    <main>
-      <PasswordGen />
+    <main class="split">
+      <div class="col">
+        <PasswordOutput
+          :password="password"
+          :copied="copied"
+          :alphabet="charPool"
+          @generate="generatePassword"
+          @copy="copyToClipboard"
+        />
+      </div>
+
+      <div class="col col-controls">
+        <PasswordControls
+          v-model:length="passwordLength"
+          v-model:uppercase="includeUppercase"
+          v-model:numbers="includeNumbers"
+          v-model:special="includeSpecialChars"
+          v-model:no-edge-digits="noNumberFirstLast"
+        />
+      </div>
     </main>
+
+    <footer class="bar legend">
+      <span><kbd>space</kbd><kbd>enter</kbd> regenerate</span>
+      <span><kbd>c</kbd> copy</span>
+    </footer>
   </div>
 </template>
 
 <style scoped>
-@import '@/fonts/tanker/css/tanker.css';
-@import '@/fonts/satoshi/css/satoshi.css';
-
-.page-container {
-  min-height: 100vh;
-  width: 100%;
-  background-color: #0a0a0a;
-  position: relative;
-  font-family: 'Satoshi-Variable', sans-serif;
-}
-
-.page-container h1,
-.page-container h2,
-.page-container h3,
-.page-container h4,
-.page-container h5,
-.page-container h6 {
-  font-family: 'Tanker-Regular', sans-serif;
-}
-
-.logo-container {
+.texture {
   position: fixed;
-  top: 1rem;
-  left: 1rem;
-  width: 4rem;
-  height: 4rem;
-  z-index: 20;
-}
-
-.dot-grid-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
+  background-image:
+    radial-gradient(120% 90% at 50% 45%, transparent 35%, rgb(0 0 0 / 0.6) 100%),
+    repeating-linear-gradient(to right, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 32px);
 }
 
-main {
+.shell {
   position: relative;
-  z-index: 10;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   min-height: 100vh;
-  width: 100%;
+  min-height: 100dvh;
+}
+
+.bar {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(var(--step) * 2);
+  padding: calc(var(--step) * 1.5) calc(var(--step) * 2);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+header.bar {
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  color: var(--accent);
+}
+
+.source {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.col {
+  display: grid;
+  min-width: 0;
+}
+
+.col-controls {
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 900px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+
+  .col-controls {
+    border-top: 0;
+    border-left: 1px solid var(--border);
+  }
+}
+
+.legend {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: var(--step) calc(var(--step) * 3);
+  border-top: 1px solid var(--border);
+  color: var(--fg-dim);
+}
+
+kbd {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font: inherit;
 }
 </style>

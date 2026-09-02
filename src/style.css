@@ -1,1 +1,74 @@
 @import 'tailwindcss';
+
+/* Tokens. Plain names are the source of truth — components read them via var(). */
+:root {
+  --bg: #0a0a0a;
+  --surface: #101010;
+  --fg: #e8e8e8;
+  --fg-dim: #6b6b6b;
+  --border: #262626;
+  --accent: #27ff64;
+  --accent-dim: rgb(39 255 100 / 0.2);
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+  --step: 8px;
+}
+
+/* Same tokens as Tailwind utilities (bg-surface, text-fg-dim, border-border...).
+   `inline` means Tailwind emits var(--x) directly instead of a second copy. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-fg-dim: var(--fg-dim);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus is the only decoration we never take away. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
