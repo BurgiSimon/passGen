@@ -171,9 +171,10 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
           <span class="history-label">History ({{ history.length }}) — this session only</span>
           <span class="history-chevron" aria-hidden="true">▾</span>
         </summary>
-        <div class="history-head">
-          <button type="button" class="clear-button" @click="clearAndCollapse">Clear</button>
-        </div>
+        <!-- Sits in the summary row, but as a sibling of it: a button nested
+             inside <summary> is interactive content in a toggle and behaves
+             differently per browser. <details> hides it while collapsed. -->
+        <button type="button" class="clear-button" @click="clearAndCollapse">Clear</button>
         <ul class="history-list">
           <li v-for="entry in history" :key="entry">
             <button type="button" class="history-item" @click="copyToClipboard(entry)">
@@ -407,6 +408,7 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 
 /* History */
 .history {
+  position: relative;
   display: flex;
   flex: 0 1 auto;
   flex-direction: column;
@@ -432,12 +434,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   display: none;
 }
 
-.history-head {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.75rem;
-}
-
 .history-label {
   font-size: 0.75rem;
   font-weight: 500;
@@ -458,24 +454,32 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   transform: rotate(180deg);
 }
 
+/* Pinned to the summary row, just left of the chevron: 1rem is the panel
+   padding, the rest clears the chevron column plus a gap. */
 .clear-button {
-  padding: 0.15rem 0.5rem;
+  position: absolute;
+  top: 1rem;
+  right: 2.5rem;
+  display: flex;
+  align-items: center;
+  height: 1.125rem;
+  padding: 0;
   font: inherit;
   font-size: 0.75rem;
-  color: hsla(0, 0%, 100%, 0.6);
+  color: hsla(0, 0%, 100%, 0.45);
   background: transparent;
-  border: 1px solid hsla(0, 0%, 100%, 0.2);
-  border-radius: 0.5rem;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .clear-button:hover {
   color: var(--glass-accent);
-  border-color: hsl(var(--glass-accent-hsl) / 0.5);
 }
 
 .history-list {
+  /* Scrolls, but the bar itself is visual noise on a 10-row list. */
+  scrollbar-width: none;
   /* Shrinks to the leftover space rather than a fixed height, so the panel
      never pushes the column past the viewport. */
   flex: 1 1 auto;
@@ -485,6 +489,10 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   padding: 0;
   overflow-y: auto;
   list-style: none;
+}
+
+.history-list::-webkit-scrollbar {
+  display: none;
 }
 
 .history-item {

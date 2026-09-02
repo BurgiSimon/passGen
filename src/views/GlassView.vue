@@ -85,6 +85,10 @@ const theme = randomGlassTheme()
    user-select inherits, so this one rule covers the whole skin. */
 .page-container {
   min-height: 100vh;
+  /* The global :focus-visible ring is var(--accent) — terminal green. Retint it
+     to the rolled glass accent rather than dropping it; keyboard focus has to
+     stay visible. */
+  --accent: var(--glass-accent);
   width: 100%;
   background-color: #0a0a0a;
   color-scheme: dark;
