@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AnimatedList from './AnimatedList.vue'
+
 interface Props {
   entries?: string[]
   lastCopied?: string
@@ -29,24 +31,37 @@ const emit = defineEmits<{
 
     <p v-if="!entries.length" class="empty">No earlier passwords yet.</p>
 
-    <ol v-else class="list">
-      <li v-for="(entry, i) in entries" :key="i">
+    <!-- Arrow navigation is off: the rows are real buttons, so Tab and Enter
+         already work, and the list's Enter handler would fight the global
+         regenerate shortcut. -->
+    <AnimatedList
+      v-else
+      class="list"
+      :items="entries"
+      :enable-arrow-navigation="false"
+      item-class-name="row-wrap"
+      @item-selected="(item) => emit('copy', item)"
+    >
+      <template #default="{ item, index }">
         <button
           type="button"
           class="row"
-          :aria-label="`Copy earlier password ${i + 1} of ${entries.length}`"
-          @click="emit('copy', entry)"
+          :aria-label="`Copy earlier password ${index + 1} of ${entries.length}`"
         >
-          <span class="value">{{ entry }}</span>
-          <span class="action">{{ lastCopied === entry ? 'copied' : 'copy' }}</span>
+          <span class="value">{{ item }}</span>
+          <span class="action">{{ lastCopied === item ? 'copied' : 'copy' }}</span>
         </button>
-      </li>
-    </ol>
+      </template>
+    </AnimatedList>
   </section>
 </template>
 
 <style scoped>
 .history {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
   border-top: 1px solid var(--border);
   padding: calc(var(--step) * 2) calc(var(--step) * 4);
 }
@@ -107,11 +122,7 @@ const emit = defineEmits<{
 }
 
 .list {
-  margin: var(--step) 0 0;
-  padding: 0;
-  list-style: none;
-  max-height: 30vh;
-  overflow-y: auto;
+  margin-top: var(--step);
 }
 
 .row {

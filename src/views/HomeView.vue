@@ -179,9 +179,16 @@ header.bar {
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* The history row is a fixed height, not `auto`. If it grew with its contents
+   it would eat into the 1fr row and shove the password up every time a new
+   entry landed — the list scrolls inside this box instead. */
 .col {
+  /* Viewport-relative, so it scales with the screen — but fixed for any given
+     viewport, which is what keeps the password still. */
+  --history-h: clamp(140px, 24vh, 260px);
+
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) var(--history-h);
   min-width: 0;
 }
 

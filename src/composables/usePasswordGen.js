@@ -135,8 +135,10 @@ export function usePasswordGen() {
   }
 
   const handleKeydown = (e) => {
-    const tag = e.target.tagName
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+    // Any focused control keeps its own keys. Guarding only on INPUT/TEXTAREA/
+    // SELECT meant Enter and Space on a focused button were preventDefault'd
+    // here, so buttons could be tabbed to but never activated from the keyboard.
+    if (e.target.closest?.('button, a[href], input, textarea, select, [role="button"]')) return
     if (e.target.isContentEditable) return
     // Don't hijack Ctrl+C / Cmd+C / Alt+C.
     if (e.ctrlKey || e.metaKey || e.altKey) return

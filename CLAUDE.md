@@ -29,13 +29,15 @@ Docker: `docker compose up -d` (serves on port 3000)
 - **`src/components/PasswordOutput.vue`** — password hero, entropy meter, copy/generate buttons, and the glyph-cascade reveal animation (one self-terminating rAF loop, no library).
 - **`src/components/PasswordControls.vue`** — mode switch, native `<input type=range>`, native radios and checkboxes styled as `[x]` / `[ ]`.
 - **`src/components/PasswordHistory.vue`** — the session history list.
+- **`src/components/AnimatedList.vue`** — vue-bits AnimatedList, ported and restyled. Depends on `motion-v`. Deviations from upstream are commented in the file: a scoped slot (upstream hardcodes a `<p>`, which cannot hold a button), no Tab hijacking, reduced-motion support, and gradients that recompute when the item count changes rather than only on scroll.
 
 ### Behavior that must not drift
 
 - Lowercase is always included and is not a toggle. There is deliberately **no** "at least one of each set" guarantee — adding one would change the output distribution.
 - Passwords come from `crypto.getRandomValues` only. `Math.random()` is for the reveal animation and must never touch a password.
 - Cookie keys `pg_uppercase`, `pg_numbers`, `pg_special`, `pg_noNumFirstLast`, `pg_length` — 365 days, `SameSite=Lax`. `pg_length` is user-editable input and is clamped on read.
-- Controls must stay **native** form elements. The global keydown handler skips shortcuts when the focused element is `INPUT`/`TEXTAREA`/`SELECT`; a `<button role="switch">` would make Space both toggle and regenerate.
+- Controls must stay **native** form elements, so they keep their own keyboard behaviour.
+- The global keydown handler bails out whenever the event target is inside any interactive element (`button, a[href], input, textarea, select, [role=button]`). Narrowing that back to tag names would `preventDefault()` Enter and Space on focused buttons, making every button tabbable but not operable.
 - Shortcuts ignore `ctrl`/`meta`/`alt` so `Ctrl+C` is not hijacked.
 - **History is in-memory only and must stay that way.** Writing generated passwords to a cookie, `localStorage`, or `sessionStorage` would leave plaintext secrets readable by any script on the origin. The list dies with the tab, and the UI says so.
 - `entropyBits()` describes the *generator*, not the string it produced. Capitalising every word is deterministic, so it adds 0 bits — do not "fix" that to look better.
@@ -57,6 +59,7 @@ bun src/lib/passwordCore.check.mjs   # assert-based, no framework
 - Monospace throughout via the native `ui-monospace` stack — no webfont, no `@font-face`
 - Zero `border-radius`. Never remove the global `:focus-visible` outline
 - Grid/flex children that can hold a long password need `min-width: 0`, or min-content width blows out the layout on narrow viewports
+- The history row in `HomeView` has a fixed height (`--history-h`), not `auto`. An `auto` row grows with its contents and pushes the password up every time an entry lands; the list scrolls inside the reserved box instead.
 - Formatting: no semicolons, single quotes, 100 char print width (see `.prettierrc.json`)
 - Path alias: `@/` maps to `./src/`
 
