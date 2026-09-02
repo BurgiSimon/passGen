@@ -1,12 +1,15 @@
 <template>
-  <section
+  <!-- Purely decorative: a <section> here is a nameless landmark region that
+       screen readers announce and crawlers weigh. div + aria-hidden instead. -->
+  <div
     :class="`flex items-center justify-center h-full w-full relative ${className}`"
     :style="style"
+    aria-hidden="true"
   >
     <div ref="wrapperRef" class="w-full h-full relative">
       <canvas ref="canvasRef" class="absolute inset-0 w-full h-full pointer-events-none" />
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">

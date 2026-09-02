@@ -2,16 +2,85 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/lock.svg" type="image/svg+xml" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>PassGen — Secure Password &amp; Passphrase Generator</title>
+    <meta
+      name="description"
+      content="Free password generator that runs entirely in your browser. Random characters or EFF passphrases from crypto.getRandomValues — nothing is sent anywhere."
+    />
+    <link rel="canonical" href="%SITE_URL%/" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="format-detection" content="telephone=no" />
+
     <meta name="color-scheme" content="dark light" />
     <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f4f4f0" media="(prefers-color-scheme: light)" />
+
+    <link rel="icon" href="/lock.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <meta name="application-name" content="PassGen" />
+    <meta name="apple-mobile-web-app-title" content="PassGen" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PassGen" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:title" content="PassGen — Secure Password &amp; Passphrase Generator" />
     <meta
-      name="description"
-      content="Password generator. crypto.getRandomValues, in the browser, nothing sent anywhere."
+      property="og:description"
+      content="Free password generator that runs entirely in your browser. Random characters or EFF passphrases from crypto.getRandomValues — nothing is sent anywhere."
     />
-    <title>passgen</title>
+    <meta property="og:image" content="%SITE_URL%/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="PassGen: strong passwords and passphrases, generated in your browser."
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PassGen — Secure Password &amp; Passphrase Generator" />
+    <meta
+      name="twitter:description"
+      content="Free password generator that runs entirely in your browser. Random characters or EFF passphrases from crypto.getRandomValues — nothing is sent anywhere."
+    />
+    <meta name="twitter:image" content="%SITE_URL%/og.png" />
+    <meta
+      name="twitter:image:alt"
+      content="PassGen: strong passwords and passphrases, generated in your browser."
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "PassGen",
+        "url": "%SITE_URL%/",
+        "description": "Free password generator that runs entirely in your browser. Random characters or EFF Short Wordlist passphrases from crypto.getRandomValues — nothing is sent anywhere.",
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "Any browser",
+        "browserRequirements": "Requires JavaScript and the Web Crypto API",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Random-character passwords with configurable length and character sets",
+          "EFF Short Wordlist #1 passphrases with a choice of separator",
+          "Cryptographically secure randomness via crypto.getRandomValues",
+          "Session-only history that is never written to storage",
+          "Runs fully offline in the browser; no password ever leaves the device"
+        ]
+      }
+    </script>
+
     <script>
       // Pin the saved theme before first paint, otherwise a light-theme user on a
       // dark-default system sees a dark flash on every load. Vue re-applies this later.
@@ -22,6 +91,42 @@
   </head>
   <body>
     <div id="app"></div>
+
+    <!-- The app is client-rendered, so #app is empty to a crawler that does not run
+         JS. This is the only copy in the served HTML that describes the page. -->
+    <noscript>
+      <div
+        style="
+          margin: 0 auto;
+          max-width: 42rem;
+          padding: 3rem 1.5rem;
+          font-family: system-ui, sans-serif;
+        "
+      >
+        <h1>PassGen — secure password and passphrase generator</h1>
+        <p>
+          PassGen builds strong passwords and passphrases entirely inside your browser. Randomness
+          comes from <code>crypto.getRandomValues</code>, the browser's cryptographically secure
+          generator; nothing you generate is transmitted, logged, or written to storage.
+        </p>
+        <p>Two modes:</p>
+        <ul>
+          <li>
+            <strong>Random characters</strong> — choose the length and mix in uppercase letters,
+            digits and symbols. Lowercase is always included.
+          </li>
+          <li>
+            <strong>Passphrase</strong> — words drawn from the EFF Short Wordlist #1, joined by a
+            separator of your choice, for something you can actually type from memory.
+          </li>
+        </ul>
+        <p>
+          The session history lives in memory only and dies with the tab. PassGen needs JavaScript
+          to run — please enable it.
+        </p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -34,8 +34,13 @@ The app will be available at `http://localhost:5173` (default Vite port).
 ### Production Build
 
 ```bash
-bun run build
+SITE_URL=https://your-domain.example bun run build
 ```
+
+`SITE_URL` is the public origin the site is served from. The build bakes it into the canonical
+link, the Open Graph / Twitter tags, the JSON-LD and the generated `sitemap.xml` and `robots.txt`.
+Leave it unset and the build still succeeds, but it warns and falls back to a placeholder origin,
+which means link previews and search-engine canonicalisation will point at the wrong host.
 
 ## Docker
 
@@ -48,7 +53,7 @@ docker compose up -d
 Or build and run manually:
 
 ```bash
-docker build -t passgen .
+docker build --build-arg SITE_URL=https://your-domain.example -t passgen .
 docker run -d -p 3000:3000 passgen
 ```
 
