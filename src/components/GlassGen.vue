@@ -259,7 +259,7 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 }
 
 .copy-hint.copied {
-  color: #27ff64;
+  color: var(--glass-accent);
 }
 
 /* Generate button */
@@ -269,22 +269,30 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   margin-bottom: 1.5rem;
   font-weight: 600;
   color: #ffffff;
-  background: linear-gradient(135deg, hsla(142, 100%, 58%, 0.3), hsla(142, 100%, 58%, 0.15));
+  background: linear-gradient(
+    135deg,
+    hsl(var(--glass-accent-hsl) / 0.3),
+    hsl(var(--glass-accent-hsl) / 0.15)
+  );
   backdrop-filter: blur(0.75em);
   -webkit-backdrop-filter: blur(0.75em);
   border: none;
   border-radius: 1rem;
   cursor: pointer;
   box-shadow:
-    0 0 0 1px hsla(142, 100%, 58%, 0.4) inset,
+    0 0 0 1px hsl(var(--glass-accent-hsl) / 0.4) inset,
     0 8px 32px hsla(0, 0%, 0%, 0.2);
   transition: all 0.3s ease;
 }
 
 .glass-button:hover {
-  background: linear-gradient(135deg, hsla(142, 100%, 58%, 0.4), hsla(142, 100%, 58%, 0.25));
+  background: linear-gradient(
+    135deg,
+    hsl(var(--glass-accent-hsl) / 0.4),
+    hsl(var(--glass-accent-hsl) / 0.25)
+  );
   box-shadow:
-    0 0 0 1px hsla(142, 100%, 58%, 0.6) inset,
+    0 0 0 1px hsl(var(--glass-accent-hsl) / 0.6) inset,
     0 8px 32px hsla(0, 0%, 0%, 0.3);
   transform: translateY(-2px);
 }
@@ -342,8 +350,12 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 
 .mode-button.active {
   color: #ffffff;
-  background: linear-gradient(135deg, hsla(142, 100%, 58%, 0.3), hsla(142, 100%, 58%, 0.15));
-  box-shadow: 0 0 0 1px hsla(142, 100%, 58%, 0.4) inset;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--glass-accent-hsl) / 0.3),
+    hsl(var(--glass-accent-hsl) / 0.15)
+  );
+  box-shadow: 0 0 0 1px hsl(var(--glass-accent-hsl) / 0.4) inset;
 }
 
 /* Checkbox group */
@@ -369,7 +381,7 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 .checkbox-input {
   width: 1.25rem;
   height: 1.25rem;
-  accent-color: #27ff64;
+  accent-color: var(--glass-accent);
   cursor: pointer;
 }
 
@@ -459,8 +471,8 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 }
 
 .clear-button:hover {
-  color: #27ff64;
-  border-color: hsla(142, 100%, 58%, 0.5);
+  color: var(--glass-accent);
+  border-color: hsl(var(--glass-accent-hsl) / 0.5);
 }
 
 .history-list {
@@ -515,6 +527,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 }
 
 .history-copied.copied {
-  color: #27ff64;
+  color: var(--glass-accent);
 }
 </style>

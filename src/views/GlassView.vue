@@ -3,12 +3,20 @@ import GlassGen from '@/components/GlassGen.vue'
 import DotGrid from '@/components/DotGrid.vue'
 import MetallicPaint from '@/components/MetallicPaint.vue'
 import lockSvg from '/lock.svg'
+import { randomGlassTheme } from '@/lib/glassThemes'
 
 const emit = defineEmits(['switch-skin'])
+
+// One roll per page load, held for the life of the view. The custom properties
+// go on .page-container, so every descendant — GlassGen included — inherits it.
+const theme = randomGlassTheme()
 </script>
 
 <template>
-  <div class="page-container">
+  <div
+    class="page-container"
+    :style="{ '--glass-accent': theme.hex, '--glass-accent-hsl': theme.hsl }"
+  >
     <!-- Logo top-left with metallic effect -->
     <div class="logo-container">
       <MetallicPaint
@@ -32,7 +40,7 @@ const emit = defineEmits(['switch-skin'])
         :contour="0.2"
         light-color="#ffffff"
         dark-color="#000000"
-        tint-color="#27FF64"
+        :tint-color="theme.hex"
       />
     </div>
 
@@ -40,7 +48,7 @@ const emit = defineEmits(['switch-skin'])
     <button
       type="button"
       class="skin-picker"
-      aria-label="Switch to the terminal skin"
+      :aria-label="`Switch to the terminal skin. Accent: ${theme.name}.`"
       @click="emit('switch-skin')"
     >
       skin: glass
@@ -50,8 +58,8 @@ const emit = defineEmits(['switch-skin'])
     <DotGrid
       :dot-size="1.5"
       :gap="30"
-      base-color="#27FF64"
-      active-color="#27FF64"
+      :base-color="theme.hex"
+      :active-color="theme.hex"
       :proximity="75"
       :speed-trigger="100"
       :shock-radius="125"
@@ -127,8 +135,8 @@ const emit = defineEmits(['switch-skin'])
 }
 
 .skin-picker:hover {
-  color: #27ff64;
-  box-shadow: 0 0 0 1px hsla(142, 100%, 58%, 0.5) inset;
+  color: var(--glass-accent);
+  box-shadow: 0 0 0 1px hsl(var(--glass-accent-hsl) / 0.5) inset;
 }
 
 .dot-grid-bg {

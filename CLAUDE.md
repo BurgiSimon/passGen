@@ -8,7 +8,7 @@ PassGen is a password generator web app built with Vue 3 (Composition API), Vite
 
 There are **two skins** over the same generator, picked with the button in the top bar and persisted in `pg_skin`:
 
-- **`glass`** — the default. Dark-only, Satoshi/Tanker webfonts, frosted panels, animated dot-grid background, metallic WebGL lock logo.
+- **`glass`** — the default. Dark-only, Satoshi/Tanker webfonts, frosted panels, animated dot-grid background, metallic WebGL lock logo. Its accent colour is rolled at random from `glassThemes.js` on every page load.
 - **`terminal`** — brutalist: monospace, zero border-radius, hairline borders, one accent colour used only to signal state, plus a light/dark/system theme toggle.
 
 ## Commands
@@ -28,6 +28,7 @@ Docker: `docker compose up -d` (serves on port 3000)
 - **Single route** (`/`) renders `HomeView.vue`, which does nothing but pick a skin: `GlassView.vue` or `TerminalView.vue`. Only one is mounted at a time, so each skin calls `usePasswordGen()` for itself — there is no shared state to keep in sync, no store, no provide/inject. Switching skins therefore resets the session (fresh password, empty history); the cookie-backed preferences survive.
 - **`src/views/TerminalView.vue`** — terminal skin shell; the only place `usePasswordGen()` state is passed down as props and `v-model`s (to `PasswordOutput` / `PasswordControls` / `PasswordHistory`).
 - **`src/views/GlassView.vue`** — glass skin shell: `DotGrid` background, `MetallicPaint` logo, skin picker. Renders `GlassGen.vue`, which holds the whole glass UI in one component (the original `PasswordGen.vue`, rewired to `usePasswordGen()` so both skins share one CSPRNG path — the old inline `getRandomChar` had modulo bias).
+- **`src/lib/glassThemes.js`** — the ten glass accents. Each entry stores the colour twice: `hex` for `DotGrid`/`MetallicPaint`, which parse hex only, and `hsl` as bare components so CSS can build the translucent variants. `GlassView` rolls one per load and publishes it as `--glass-accent` / `--glass-accent-hsl` on `.page-container`; both custom properties inherit, so `GlassGen` needs no props for it. Nothing in the glass skin hardcodes a colour any more — a new entry in the array is the whole change.
 - **`src/composables/useSkin.js`** — `glass` / `terminal`, persisted in `pg_skin`, default `glass`.
 - **`src/lib/passwordCore.js`** — pure generation logic. No Vue, no DOM. Character sets, CSPRNG with rejection sampling, `generate()`, `generatePassphrase()`, and the `clamp*` cookie guards. Assertable by a plain script.
 - **`src/lib/wordlist.js`** — EFF Short Wordlist #1, CC BY 3.0 US. 1295 words (see the file header for the one deliberate omission).
@@ -44,7 +45,7 @@ Docker: `docker compose up -d` (serves on port 3000)
 ### Behavior that must not drift
 
 - Lowercase is always included and is not a toggle. There is deliberately **no** "at least one of each set" guarantee — adding one would change the output distribution.
-- Passwords come from `crypto.getRandomValues` only. `Math.random()` is for the reveal animation and must never touch a password.
+- Passwords come from `crypto.getRandomValues` only. `Math.random()` drives the reveal animation and the glass accent roll, and must never touch a password.
 - Cookie keys `pg_uppercase`, `pg_numbers`, `pg_special`, `pg_noNumFirstLast`, `pg_length` — 365 days, `SameSite=Lax`. `pg_length` is user-editable input and is clamped on read.
 - Controls must stay **native** form elements, so they keep their own keyboard behaviour.
 - The global keydown handler bails out whenever the event target is inside any interactive element (`button, a[href], input, textarea, select, [role=button]`). Narrowing that back to tag names would `preventDefault()` Enter and Space on focused buttons, making every button tabbable but not operable.
