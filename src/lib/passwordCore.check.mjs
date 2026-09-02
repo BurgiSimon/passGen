@@ -11,8 +11,6 @@ import {
   clampLength,
   clampWords,
   generatePassphrase,
-  entropyBits,
-  strengthLabel,
   randomIndex,
   SEPARATORS,
   MIN_WORDS,
@@ -161,74 +159,6 @@ const idx = new Set()
 for (let i = 0; i < 40000; i++) idx.add(randomIndex(WORDS.length))
 eq(idx.size, WORDS.length, `only ${idx.size}/${WORDS.length} word indices drawn in 40k samples`)
 ok(Math.min(...idx) === 0 && Math.max(...idx) === WORDS.length - 1, 'randomIndex range')
-
-// ---- entropy ----
-const bits = (o) => Math.round(entropyBits(o) * 100) / 100
-
-// 16 lowercase-only chars = 16 * log2(26)
-eq(
-  bits({ mode: 'random', length: 16, uppercase: false, numbers: false, special: false }),
-  Math.round(16 * Math.log2(26) * 100) / 100,
-  'entropy lowercase-only',
-)
-// full 88-char pool, no edge rule
-eq(
-  bits({ mode: 'random', length: 24, uppercase: true, numbers: true, special: true }),
-  Math.round(24 * Math.log2(88) * 100) / 100,
-  'entropy full pool',
-)
-// edge rule shrinks the pool for exactly 2 positions
-eq(
-  bits({
-    mode: 'random',
-    length: 16,
-    uppercase: true,
-    numbers: true,
-    special: false,
-    noNumberFirstLast: true,
-  }),
-  Math.round((2 * Math.log2(52) + 14 * Math.log2(62)) * 100) / 100,
-  'entropy with edge rule',
-)
-ok(
-  entropyBits({
-    mode: 'random',
-    length: 16,
-    uppercase: true,
-    numbers: true,
-    noNumberFirstLast: true,
-  }) < entropyBits({ mode: 'random', length: 16, uppercase: true, numbers: true }),
-  'edge rule must reduce entropy, not raise it',
-)
-eq(bits({ mode: 'random', length: 0, uppercase: true }), 0, 'entropy of empty password')
-
-eq(
-  bits({ mode: 'passphrase', words: 6 }),
-  Math.round(6 * Math.log2(WORDS.length) * 100) / 100,
-  'entropy 6-word passphrase',
-)
-eq(
-  bits({ mode: 'passphrase', words: 6, appendDigit: true }),
-  Math.round((6 * Math.log2(WORDS.length) + Math.log2(10)) * 100) / 100,
-  'entropy passphrase + digit',
-)
-ok(
-  entropyBits({ mode: 'passphrase', words: 6, capitalize: true }) ===
-    entropyBits({ mode: 'passphrase', words: 6 }),
-  'capitalize is deterministic and must add 0 bits',
-)
-ok(
-  entropyBits({ mode: 'passphrase', words: 99 }) === entropyBits({ mode: 'passphrase', words: 8 }),
-  'entropy uses clamped word count',
-)
-
-// bands are monotonic and cover the boundaries
-eq(strengthLabel(49.9), 'weak', 'band weak')
-eq(strengthLabel(50), 'fair', 'band fair lower bound')
-eq(strengthLabel(69.9), 'fair', 'band fair upper')
-eq(strengthLabel(70), 'strong', 'band strong lower bound')
-eq(strengthLabel(99.9), 'strong', 'band strong upper')
-eq(strengthLabel(100), 'excellent', 'band excellent lower bound')
 
 // clampWords — cookie trust boundary
 eq(clampWords('abc'), 5, "clampWords('abc')")

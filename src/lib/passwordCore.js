@@ -63,24 +63,6 @@ export const generatePassphrase = ({ words, separator, capitalize, appendDigit }
   return appendDigit ? out + sep + randomChar(NUMBERS) : out
 }
 
-// Bits of entropy in the *generator*, not in the string it happened to produce.
-// Capitalising every word is deterministic and adds nothing.
-export const entropyBits = (o) => {
-  if (o.mode === 'passphrase') {
-    return clampWords(o.words) * Math.log2(WORDS.length) + (o.appendDigit ? Math.log2(10) : 0)
-  }
-  if (o.length <= 0) return 0
-  const pool = buildPool(o).length
-  if (o.noNumberFirstLast && o.length >= 2) {
-    const edge = buildNonNumberPool(o).length
-    return 2 * Math.log2(edge) + (o.length - 2) * Math.log2(pool)
-  }
-  return o.length * Math.log2(pool)
-}
-
-export const strengthLabel = (bits) =>
-  bits < 50 ? 'weak' : bits < 70 ? 'fair' : bits < 100 ? 'strong' : 'excellent'
-
 // pg_* values come from user-editable cookies — a trust boundary.
 const clampInt = (value, min, max, fallback) => {
   const n = parseInt(value, 10)

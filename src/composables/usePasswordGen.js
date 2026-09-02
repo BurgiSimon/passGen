@@ -4,8 +4,6 @@ import {
   buildPool,
   generate,
   generatePassphrase,
-  entropyBits,
-  strengthLabel,
   clampLength,
   clampWords,
   DEFAULT_LENGTH,
@@ -57,9 +55,6 @@ export function usePasswordGen() {
   const charPool = computed(() =>
     isPassphrase.value ? 'abcdefghijklmnopqrstuvwxyz' + separator.value : buildPool(options.value),
   )
-
-  const bits = computed(() => entropyBits(options.value))
-  const strength = computed(() => strengthLabel(bits.value))
 
   const detail = computed(() =>
     isPassphrase.value
@@ -191,8 +186,6 @@ export function usePasswordGen() {
     clearHistory,
     mode,
     isPassphrase,
-    bits,
-    strength,
     detail,
     passwordLength,
     includeUppercase,

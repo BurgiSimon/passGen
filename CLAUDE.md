@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PassGen is a password generator web app built with Vue 3 (Composition API), Vite, and Tailwind CSS 4. Two modes — random characters and EFF-wordlist passphrases — with an entropy meter, a session-only history, and a light/dark/system theme. The UI is terminal/brutalist: monospace, zero border-radius, hairline borders, one accent colour used only to signal state.
+PassGen is a password generator web app built with Vue 3 (Composition API), Vite, and Tailwind CSS 4. Two modes — random characters and EFF-wordlist passphrases — with a session-only history.
+
+There are **two skins** over the same generator, picked with the button in the top bar and persisted in `pg_skin`:
+
+- **`glass`** — the default. Dark-only, Satoshi/Tanker webfonts, frosted panels, animated dot-grid background, metallic WebGL lock logo.
+- **`terminal`** — brutalist: monospace, zero border-radius, hairline borders, one accent colour used only to signal state, plus a light/dark/system theme toggle.
 
 ## Commands
 
@@ -20,13 +25,17 @@ Docker: `docker compose up -d` (serves on port 3000)
 ## Architecture
 
 - **Entry:** `index.html` → `src/main.js` → Vue app with Router
-- **Single route** (`/`) renders `HomeView.vue`, which is the only place `usePasswordGen()` is called; it passes state down as props and `v-model`s. No store, no provide/inject.
-- **`src/lib/passwordCore.js`** — pure generation logic. No Vue, no DOM. Character sets, CSPRNG with rejection sampling, `generate()`, `generatePassphrase()`, `entropyBits()`, and the `clamp*` cookie guards. Assertable by a plain script.
+- **Single route** (`/`) renders `HomeView.vue`, which does nothing but pick a skin: `GlassView.vue` or `TerminalView.vue`. Only one is mounted at a time, so each skin calls `usePasswordGen()` for itself — there is no shared state to keep in sync, no store, no provide/inject. Switching skins therefore resets the session (fresh password, empty history); the cookie-backed preferences survive.
+- **`src/views/TerminalView.vue`** — terminal skin shell; the only place `usePasswordGen()` state is passed down as props and `v-model`s (to `PasswordOutput` / `PasswordControls` / `PasswordHistory`).
+- **`src/views/GlassView.vue`** — glass skin shell: `DotGrid` background, `MetallicPaint` logo, skin picker. Renders `GlassGen.vue`, which holds the whole glass UI in one component (the original `PasswordGen.vue`, rewired to `usePasswordGen()` so both skins share one CSPRNG path — the old inline `getRandomChar` had modulo bias).
+- **`src/composables/useSkin.js`** — `glass` / `terminal`, persisted in `pg_skin`, default `glass`.
+- **`src/lib/passwordCore.js`** — pure generation logic. No Vue, no DOM. Character sets, CSPRNG with rejection sampling, `generate()`, `generatePassphrase()`, and the `clamp*` cookie guards. Assertable by a plain script.
 - **`src/lib/wordlist.js`** — EFF Short Wordlist #1, CC BY 3.0 US. 1295 words (see the file header for the one deliberate omission).
 - **`src/lib/cookies.js`** — cookie read/write plus `getBool`/`getEnum` validators.
 - **`src/composables/usePasswordGen.js`** — Vue state, cookie persistence, clipboard, haptics, history, global keyboard shortcuts.
 - **`src/composables/useTheme.js`** — `system` / `dark` / `light`, persisted in `pg_theme`.
-- **`src/components/PasswordOutput.vue`** — password hero, entropy meter, copy/generate buttons, and the glyph-cascade reveal animation (one self-terminating rAF loop, no library).
+- **`src/components/{DotGrid,MetallicPaint,ElasticSlider,DecryptedText}.vue`** — glass-skin-only vue-bits components. `DotGrid` is the one reason `gsap` is a dependency.
+- **`src/components/PasswordOutput.vue`** — password hero, copy/generate buttons, and the glyph-cascade reveal animation (one self-terminating rAF loop, no library).
 - **`src/components/PasswordControls.vue`** — mode switch, native `<input type=range>`, native radios and checkboxes styled as `[x]` / `[ ]`.
 - **`src/components/PasswordHistory.vue`** — the session history list.
 - **`src/components/AnimatedList.vue`** — vue-bits AnimatedList, ported and restyled. **No dependency**: upstream's per-row `motion-v` `useInView` is replaced by one shared `IntersectionObserver` plus a CSS transition, same 0.7→1 scale and 0→1 fade. Other deviations, all commented in the file: a scoped slot (upstream hardcodes a `<p>`, which cannot hold a button), no Tab hijacking, reduced-motion support, and gradients that recompute on item change rather than only on scroll.
@@ -41,8 +50,8 @@ Docker: `docker compose up -d` (serves on port 3000)
 - The global keydown handler bails out whenever the event target is inside any interactive element (`button, a[href], input, textarea, select, [role=button]`). Narrowing that back to tag names would `preventDefault()` Enter and Space on focused buttons, making every button tabbable but not operable.
 - Shortcuts ignore `ctrl`/`meta`/`alt` so `Ctrl+C` is not hijacked.
 - **History is in-memory only and must stay that way.** Writing generated passwords to a cookie, `localStorage`, or `sessionStorage` would leave plaintext secrets readable by any script on the origin. The list dies with the tab, and the UI says so.
-- `entropyBits()` describes the *generator*, not the string it produced. Capitalising every word is deterministic, so it adds 0 bits — do not "fix" that to look better.
 - No word in `wordlist.js` may contain a separator, or a phrase becomes ambiguous to read back. The check script asserts this.
+- The theme toggle (`useTheme`) belongs to the terminal skin only. The glass skin is dark by design and pins `color-scheme: dark` on its own root, so a light-theme pin left on `<html>` cannot leak into it.
 - Theming is `light-dark()` against `color-scheme`; `[data-theme]` only sets `color-scheme`. There is no duplicated palette and no `prefers-color-scheme` media query — do not reintroduce one. `light-dark()` takes colours only, so a non-colour token (an opacity, a length) cannot use it.
 - A small inline script in `index.html` pins the saved theme before first paint; without it a light-theme user gets a dark flash on every load.
 
