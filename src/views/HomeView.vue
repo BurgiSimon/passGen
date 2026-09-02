@@ -1,20 +1,35 @@
 <script setup>
 import { usePasswordGen } from '@/composables/usePasswordGen'
+import { useTheme } from '@/composables/useTheme'
 import PasswordOutput from '@/components/PasswordOutput.vue'
 import PasswordControls from '@/components/PasswordControls.vue'
+import PasswordHistory from '@/components/PasswordHistory.vue'
 
 const {
   password,
   copied,
+  lastCopied,
+  history,
+  clearHistory,
+  mode,
+  bits,
+  strength,
+  detail,
   passwordLength,
   includeUppercase,
   includeNumbers,
   includeSpecialChars,
   noNumberFirstLast,
+  wordCount,
+  separator,
+  capitalize,
+  appendDigit,
   charPool,
   generatePassword,
   copyToClipboard,
 } = usePasswordGen()
+
+const { theme, cycleTheme } = useTheme()
 </script>
 
 <template>
@@ -24,7 +39,17 @@ const {
   <div class="shell">
     <header class="bar">
       <span class="brand">passgen</span>
-      <span class="source">crypto.getRandomValues</span>
+      <span class="right">
+        <button
+          type="button"
+          class="theme"
+          :aria-label="`Theme: ${theme}. Change theme.`"
+          @click="cycleTheme"
+        >
+          theme: {{ theme }}
+        </button>
+        <span class="source">crypto.getRandomValues</span>
+      </span>
     </header>
 
     <main class="split">
@@ -33,18 +58,32 @@ const {
           :password="password"
           :copied="copied"
           :alphabet="charPool"
+          :bits="bits"
+          :strength="strength"
+          :detail="detail"
           @generate="generatePassword"
           @copy="copyToClipboard"
+        />
+        <PasswordHistory
+          :entries="history"
+          :last-copied="lastCopied"
+          @copy="copyToClipboard"
+          @clear="clearHistory"
         />
       </div>
 
       <div class="col col-controls">
         <PasswordControls
+          v-model:mode="mode"
           v-model:length="passwordLength"
           v-model:uppercase="includeUppercase"
           v-model:numbers="includeNumbers"
           v-model:special="includeSpecialChars"
           v-model:no-edge-digits="noNumberFirstLast"
+          v-model:words="wordCount"
+          v-model:separator="separator"
+          v-model:capitalize="capitalize"
+          v-model:append-digit="appendDigit"
         />
       </div>
     </main>
@@ -63,9 +102,10 @@ const {
   z-index: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(120% 90% at 50% 45%, transparent 35%, rgb(0 0 0 / 0.6) 100%),
-    repeating-linear-gradient(to right, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 32px),
-    repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 32px);
+    radial-gradient(120% 90% at 50% 45%, transparent 35%, var(--vignette) 100%),
+    repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(to bottom, currentColor 0 1px, transparent 1px 32px);
+  color: var(--grid-line);
 }
 
 .shell {
@@ -97,6 +137,35 @@ header.bar {
   color: var(--accent);
 }
 
+.right {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--step) * 2);
+  min-width: 0;
+}
+
+.theme {
+  flex: none;
+  padding: 2px var(--step);
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--fg-dim);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 120ms linear,
+    border-color 120ms linear;
+}
+
+.theme:hover,
+.theme:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .source {
   min-width: 0;
   overflow: hidden;
@@ -112,10 +181,19 @@ header.bar {
 
 .col {
   display: grid;
+  grid-template-rows: 1fr auto;
+  min-width: 0;
+}
+
+/* Grid items default to min-width: auto, so a long passphrase's min-content
+   width would push the column past a narrow viewport. */
+.col > * {
   min-width: 0;
 }
 
 .col-controls {
+  grid-template-rows: auto;
+  align-content: start;
   border-top: 1px solid var(--border);
 }
 
@@ -145,5 +223,17 @@ kbd {
   border: 1px solid var(--border);
   color: var(--fg);
   font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme {
+    transition: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .source {
+    display: none;
+  }
 }
 </style>

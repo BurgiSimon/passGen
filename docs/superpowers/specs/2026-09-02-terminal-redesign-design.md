@@ -229,6 +229,7 @@ props with `update:` emits — no provide/inject, no store. Two consumers do not
 ## Out of scope
 
 - No entropy/strength meter — not requested; it would be net-new behavior.
+  *(Added later, along with history, passphrase mode, and a light theme.)*
 - No password history, no passphrase mode, no theming, no light mode.
 - No test framework, no TypeScript checking, no router changes.
 - `server.js` port mismatch with the README (80 vs documented 3000) is noted but untouched.

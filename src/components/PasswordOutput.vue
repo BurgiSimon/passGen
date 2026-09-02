@@ -1,17 +1,31 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 
 interface Props {
   password?: string
   copied?: boolean
   alphabet?: string
+  bits?: number
+  strength?: string
+  detail?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   password: '',
   copied: false,
   alphabet: 'abcdefghijklmnopqrstuvwxyz',
+  bits: 0,
+  strength: '',
+  detail: '',
 })
+
+// 128 bits is the top of the scale, not a maximum — anything past it reads full.
+const METER_CELLS = 24
+const METER_MAX = 128
+
+const filledCells = computed(() =>
+  Math.round((Math.min(props.bits, METER_MAX) / METER_MAX) * METER_CELLS),
+)
 
 const emit = defineEmits<{
   generate: []
@@ -107,7 +121,20 @@ onUnmounted(stop)
       </span>
     </button>
 
-    <p class="meta">{{ password.length }} chars · pool {{ alphabet.length }}</p>
+    <div class="entropy">
+      <span class="meter" aria-hidden="true">
+        <span
+          v-for="i in METER_CELLS"
+          :key="i"
+          class="cell"
+          :class="{ 'is-on': i <= filledCells }"
+          >{{ i <= filledCells ? '█' : '░' }}</span
+        >
+      </span>
+      <p class="meta">
+        {{ detail }} · <strong>{{ Math.round(bits) }} bits</strong> · {{ strength }}
+      </p>
+    </div>
 
     <div class="actions">
       <button
@@ -189,14 +216,37 @@ onUnmounted(stop)
   }
 }
 
+.entropy {
+  padding-inline: calc(var(--step) * 1.5);
+}
+
+/* Block cells rather than a filled bar — same grammar as the [x] checkboxes. */
+.meter {
+  display: block;
+  margin-bottom: calc(var(--step) * 0.5);
+  color: var(--border);
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  user-select: none;
+}
+
+.cell.is-on {
+  color: var(--accent);
+}
+
 .meta {
   margin: 0;
-  padding-inline: calc(var(--step) * 1.5);
   color: var(--fg-dim);
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   user-select: none;
+}
+
+.meta strong {
+  color: var(--fg);
+  font-weight: inherit;
 }
 
 .actions {

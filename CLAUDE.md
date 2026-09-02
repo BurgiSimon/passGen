@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PassGen is a password generator web app built with Vue 3 (Composition API), Vite, and Tailwind CSS 4. The UI is terminal/brutalist: monospace, zero border-radius, hairline borders, one accent colour (`#27FF64`) used only to signal state.
+PassGen is a password generator web app built with Vue 3 (Composition API), Vite, and Tailwind CSS 4. Two modes — random characters and EFF-wordlist passphrases — with an entropy meter, a session-only history, and a light/dark/system theme. The UI is terminal/brutalist: monospace, zero border-radius, hairline borders, one accent colour used only to signal state.
 
 ## Commands
 
@@ -21,10 +21,14 @@ Docker: `docker compose up -d` (serves on port 3000)
 
 - **Entry:** `index.html` → `src/main.js` → Vue app with Router
 - **Single route** (`/`) renders `HomeView.vue`, which is the only place `usePasswordGen()` is called; it passes state down as props and `v-model`s. No store, no provide/inject.
-- **`src/lib/passwordCore.js`** — pure generation logic. No Vue, no DOM. Character sets, CSPRNG with rejection sampling, `generate()`, `clampLength()`. Assertable by a plain script.
-- **`src/composables/usePasswordGen.js`** — Vue state, cookie persistence, clipboard, haptics, global keyboard shortcuts.
-- **`src/components/PasswordOutput.vue`** — password hero, copy/generate buttons, and the glyph-cascade reveal animation (one self-terminating rAF loop, no library).
-- **`src/components/PasswordControls.vue`** — native `<input type=range>` and four native checkboxes styled as `[x]` / `[ ]`.
+- **`src/lib/passwordCore.js`** — pure generation logic. No Vue, no DOM. Character sets, CSPRNG with rejection sampling, `generate()`, `generatePassphrase()`, `entropyBits()`, and the `clamp*` cookie guards. Assertable by a plain script.
+- **`src/lib/wordlist.js`** — EFF Short Wordlist #1, CC BY 3.0 US. 1295 words (see the file header for the one deliberate omission).
+- **`src/lib/cookies.js`** — cookie read/write plus `getBool`/`getEnum` validators.
+- **`src/composables/usePasswordGen.js`** — Vue state, cookie persistence, clipboard, haptics, history, global keyboard shortcuts.
+- **`src/composables/useTheme.js`** — `system` / `dark` / `light`, persisted in `pg_theme`.
+- **`src/components/PasswordOutput.vue`** — password hero, entropy meter, copy/generate buttons, and the glyph-cascade reveal animation (one self-terminating rAF loop, no library).
+- **`src/components/PasswordControls.vue`** — mode switch, native `<input type=range>`, native radios and checkboxes styled as `[x]` / `[ ]`.
+- **`src/components/PasswordHistory.vue`** — the session history list.
 
 ### Behavior that must not drift
 
@@ -33,6 +37,11 @@ Docker: `docker compose up -d` (serves on port 3000)
 - Cookie keys `pg_uppercase`, `pg_numbers`, `pg_special`, `pg_noNumFirstLast`, `pg_length` — 365 days, `SameSite=Lax`. `pg_length` is user-editable input and is clamped on read.
 - Controls must stay **native** form elements. The global keydown handler skips shortcuts when the focused element is `INPUT`/`TEXTAREA`/`SELECT`; a `<button role="switch">` would make Space both toggle and regenerate.
 - Shortcuts ignore `ctrl`/`meta`/`alt` so `Ctrl+C` is not hijacked.
+- **History is in-memory only and must stay that way.** Writing generated passwords to a cookie, `localStorage`, or `sessionStorage` would leave plaintext secrets readable by any script on the origin. The list dies with the tab, and the UI says so.
+- `entropyBits()` describes the *generator*, not the string it produced. Capitalising every word is deterministic, so it adds 0 bits — do not "fix" that to look better.
+- No word in `wordlist.js` may contain a separator, or a phrase becomes ambiguous to read back. The check script asserts this.
+- Theming is `light-dark()` against `color-scheme`; `[data-theme]` only sets `color-scheme`. There is no duplicated palette and no `prefers-color-scheme` media query — do not reintroduce one. `light-dark()` takes colours only, so a non-colour token (an opacity, a length) cannot use it.
+- A small inline script in `index.html` pins the saved theme before first paint; without it a light-theme user gets a dark flash on every load.
 
 ## Testing
 
@@ -47,6 +56,7 @@ bun src/lib/passwordCore.check.mjs   # assert-based, no framework
 - Styling: design tokens in `src/style.css` (`--bg`, `--surface`, `--fg`, `--fg-dim`, `--border`, `--accent`, `--font-mono`, `--step`), consumed as `var(...)` in scoped CSS. Accent is `#27FF64`.
 - Monospace throughout via the native `ui-monospace` stack — no webfont, no `@font-face`
 - Zero `border-radius`. Never remove the global `:focus-visible` outline
+- Grid/flex children that can hold a long password need `min-width: 0`, or min-content width blows out the layout on narrow viewports
 - Formatting: no semicolons, single quotes, 100 char print width (see `.prettierrc.json`)
 - Path alias: `@/` maps to `./src/`
 
