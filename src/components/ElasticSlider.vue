@@ -45,9 +45,11 @@
           class="flex flex-grow"
         >
           <div class="relative h-full flex-grow overflow-hidden rounded-full bg-gray-400">
+            <!-- Accent comes from the glass skin's --glass-accent, which is
+                 rolled per load; a Tailwind arbitrary colour can't follow it. -->
             <div
-              class="absolute h-full bg-[#27FF64] rounded-full"
-              :style="{ width: `${rangePercentage}%` }"
+              class="absolute h-full rounded-full"
+              :style="{ width: `${rangePercentage}%`, background: 'var(--glass-accent)' }"
             />
           </div>
         </div>
