@@ -38,7 +38,7 @@ const emit = defineEmits(['switch-skin'])
 
   <div class="shell">
     <header class="bar">
-      <span class="brand">passgen</span>
+      <h1 class="brand">passgen</h1>
       <span class="right">
         <button
           type="button"
@@ -139,8 +139,12 @@ header.bar {
   border-bottom: 1px solid var(--border);
 }
 
+/* h1 for the heading outline; UA bold/2em/margin-block reset back to the bar's. */
 .brand {
+  margin: 0;
   color: var(--accent);
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .right {

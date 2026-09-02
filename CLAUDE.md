@@ -30,6 +30,10 @@ Docker: `docker compose up -d` (serves on port 3000)
 - **`src/views/GlassView.vue`** — glass skin shell: `DotGrid` background, `MetallicPaint` logo, skin picker. Renders `GlassGen.vue`, which holds the whole glass UI in one component (the original `PasswordGen.vue`, rewired to `usePasswordGen()` so both skins share one CSPRNG path — the old inline `getRandomChar` had modulo bias).
 - **`src/lib/glassThemes.js`** — the ten glass accents. Each entry stores the colour twice: `hex` for `DotGrid`/`MetallicPaint`, which parse hex only, and `hsl` as bare components so CSS can build the translucent variants. `GlassView` rolls one per load and publishes it as `--glass-accent` / `--glass-accent-hsl` on `.page-container`; both custom properties inherit, so `GlassGen` needs no props for it. Nothing in the glass skin hardcodes a colour any more — a new entry in the array is the whole change.
 - **`src/composables/useSkin.js`** — `glass` / `terminal`, persisted in `pg_skin`, default `glass`.
+- **`src/composables/useRenderLoop.js`** — the frame-scheduling gate both decorative
+  canvases (`DotGrid`, `MetallicPaint`) go through. Parks the loop when `frame()` returns
+  `false`, when the element scrolls out of view, and after one frame under
+  `prefers-reduced-motion`.
 - **`src/lib/passwordCore.js`** — pure generation logic. No Vue, no DOM. Character sets, CSPRNG with rejection sampling, `generate()`, `generatePassphrase()`, and the `clamp*` cookie guards. Assertable by a plain script.
 - **`src/lib/wordlist.js`** — EFF Short Wordlist #1, CC BY 3.0 US. 1295 words (see the file header for the one deliberate omission).
 - **`src/lib/cookies.js`** — cookie read/write plus `getBool`/`getEnum` validators.
@@ -50,6 +54,19 @@ Docker: `docker compose up -d` (serves on port 3000)
 - Controls must stay **native** form elements, so they keep their own keyboard behaviour.
 - The global keydown handler bails out whenever the event target is inside any interactive element (`button, a[href], input, textarea, select, [role=button]`). Narrowing that back to tag names would `preventDefault()` Enter and Space on focused buttons, making every button tabbable but not operable.
 - Shortcuts ignore `ctrl`/`meta`/`alt` so `Ctrl+C` is not hijacked.
+- **No canvas may end its draw function with a bare `requestAnimationFrame`.** Both decorative
+  canvases used to, and the cost was not subtle: on the production build Lighthouse measured
+  32,240 ms of total blocking time and a 43.9 s time to interactive on a page that paints in
+  0.7 s. Everything goes through `useRenderLoop`. A loop that genuinely animates forever
+  (the logo shimmer) returns `true`; one that is idle at rest (the dot grid) returns `false`
+  and is restarted by `wake()` on input.
+- **`MetallicPaint` sizes its drawing buffer from the box the canvas actually occupies.** It
+  was hardcoded to `1000 * devicePixelRatio` — up to 1750x1750 fragments of a noise and
+  refraction shader per frame to fill a 4rem logo. The quad is drawn in normalised coordinates,
+  so no shader maths depends on the buffer size; do not reintroduce a fixed one.
+- `HomeView` loads each skin with `defineAsyncComponent`. Only one is ever mounted, so a static
+  import makes every visitor download the skin they are not using — and the glass chunk carries
+  gsap, the WebGL shader and both webfonts. Keep them async.
 - **History is in-memory only and must stay that way.** Writing generated passwords to a cookie, `localStorage`, or `sessionStorage` would leave plaintext secrets readable by any script on the origin. The list dies with the tab, and the UI says so.
 - No word in `wordlist.js` may contain a separator, or a phrase becomes ambiguous to read back. The check script asserts this.
 - The theme toggle (`useTheme`) belongs to the terminal skin only. The glass skin is dark by design and pins `color-scheme: dark` on its own root, so a light-theme pin left on `<html>` cannot leak into it.
@@ -76,4 +93,28 @@ bun src/lib/passwordCore.check.mjs   # assert-based, no framework
 
 ## Production
 
-`server.js` is a Bun HTTP server that serves `/dist` with SPA fallback. The Dockerfile uses multi-stage Bun builds.
+`server.js` is a Bun HTTP server that serves `/dist`. The Dockerfile uses multi-stage Bun builds.
+
+Unknown paths return the `index.html` body with **status 404**, not 200. The router has exactly one
+route, so every other URL is genuinely not a page and a 200 there would tell crawlers an unbounded
+set of URLs exists. Add a real route and this has to become a route-aware check.
+
+Cache-Control is chosen by path shape, not by filename: `/assets/*` is content-hashed so it is
+`immutable` for a year, `index.html` is `no-cache` (a cached shell pins users to a dead asset
+graph), everything else in `dist` gets an hour.
+
+### SEO
+
+- **`SITE_URL` is a build-time input.** `canonical`, `og:url`, `og:image`, the JSON-LD `url` and the
+  sitemap all need an absolute origin, which only the deployment knows. The `seo()` plugin in
+  `vite.config.js` substitutes `%SITE_URL%` in `index.html` and emits `robots.txt`, `sitemap.xml`
+  and `llms.txt` (they cannot live in `public/`, they need the same origin baked in). Unset, it
+  falls back to `https://passgen.local` and warns. Docker: `--build-arg SITE_URL=https://…`.
+- The plugin **also serves those three files in dev**, via `configureServer`. Without that half,
+  Vite's SPA fallback answers `/robots.txt` with `index.html`, so anything auditing the dev server
+  (Lighthouse, a crawler simulator) parses HTML as a robots file and reports it malformed. The dev
+  server has to answer these the way production does or audits run against it are worthless.
+- The `<noscript>` block in `index.html` is the **only** copy a non-rendering crawler ever sees —
+  `#app` is empty until Vue mounts. It is not decoration; if the app's purpose changes, it changes.
+- `public/*.png` (icons, `og.png`) are generated by `scripts/gen-assets.py` from `lock.svg` and the
+  project's own TTFs. Run it and commit the output; nothing at build or run time invokes it.

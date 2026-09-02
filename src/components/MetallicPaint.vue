@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRenderLoop } from '@/composables/useRenderLoop'
 
 const vertexShader = `#version 300 es
 precision highp float;
@@ -304,7 +305,12 @@ const uniformsRef = ref<Record<string, WebGLUniformLocation | null>>({})
 const textureRef = ref<WebGLTexture | null>(null)
 const animTimeRef = ref(0)
 const lastTimeRef = ref(0)
-const rafRef = ref<number | null>(null)
+// setup() rebuilds the render function whenever the GL context or texture changes,
+// so the loop is bound to this indirection rather than to one closure.
+const frameRef = ref<((time: number) => boolean) | null>(null)
+const { wake, stop } = useRenderLoop(canvasRef, (time: number) =>
+  frameRef.value ? frameRef.value(time) : false,
+)
 const imgDataRef = ref<ImageData | null>(null)
 const speedRef = ref(props.speed)
 const mouseRef = ref({ x: 0.5, y: 0.5, targetX: 0.5, targetY: 0.5 })
@@ -391,7 +397,14 @@ watch(initGL, () => {
   const gl = glRef.value
   if (!canvas || !gl) return
 
-  const side = 1000 * devicePixelRatio
+  // Size the drawing buffer to the box the canvas actually occupies. This used to
+  // be a flat 1000 * devicePixelRatio, i.e. up to 1750x1750 fragments of a noise,
+  // refraction and chroma shader every frame to fill a 4rem logo — roughly 240x
+  // more pixels than are ever displayed. The quad is drawn in normalised coords,
+  // so nothing in the shader depends on the buffer size.
+  const box = canvas.getBoundingClientRect().width || canvas.clientWidth
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const side = Math.max(64, Math.round((box || 64) * dpr))
   canvas.width = side
   canvas.height = side
   gl.viewport(0, 0, side, side)
@@ -399,7 +412,7 @@ watch(initGL, () => {
   ready.value = true
 
   return () => {
-    if (rafRef.value) cancelAnimationFrame(rafRef.value)
+    stop()
     if (textureRef.value && glRef.value) {
       glRef.value.deleteTexture(textureRef.value)
     }
@@ -542,14 +555,18 @@ const setup = () => {
 
     gl.uniform1f(u.u_time, animTimeRef.value)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-    rafRef.value = requestAnimationFrame(render)
+    // The shimmer always advances, so this frame never reports itself idle. The
+    // loop is parked by useRenderLoop instead: off-screen, or reduced motion.
+    return true
   }
 
   lastTimeRef.value = performance.now()
-  rafRef.value = requestAnimationFrame(render)
+  frameRef.value = render
+  wake()
 
   cleanup = () => {
-    if (rafRef.value) cancelAnimationFrame(rafRef.value)
+    frameRef.value = null
+    stop()
     canvas.removeEventListener('mousemove', handleMouseMove)
   }
 }
@@ -572,5 +589,8 @@ watch(
 </script>
 
 <template>
-  <canvas ref="canvasRef" className="block h-full w-full object-contain" />
+  <!-- `class`, not React's `className`: as `className` this rendered a literal
+       attribute, so the canvas never got a CSS size and fell back to its 300x150
+       intrinsic default. The drawing buffer is measured from this box. -->
+  <canvas ref="canvasRef" class="block h-full w-full object-contain" />
 </template>
