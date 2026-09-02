@@ -14,6 +14,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick, useTemplateRef } from 'vue'
+import { useRenderLoop } from '@/composables/useRenderLoop'
 import { gsap } from 'gsap'
 import { InertiaPlugin } from 'gsap/InertiaPlugin'
 
@@ -144,15 +145,19 @@ const buildGrid = () => {
   dots.value = newDots
 }
 
-let rafId: number
 let resizeObserver: ResizeObserver | null = null
+
+// True while any dot is still displaced by a tween. At rest every frame paints an
+// identical canvas, so the loop parks instead and wake() restarts it on input.
+let moving = false
 
 const draw = () => {
   const canvas = canvasRef.value
-  if (!canvas) return
+  if (!canvas) return false
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!ctx) return false
   ctx.clearRect(0, 0, canvas.width, canvas.height)
+  moving = false
 
   const { x: px, y: py } = pointer.value
   const proxSq = props.proximity * props.proximity
@@ -160,6 +165,7 @@ const draw = () => {
   for (const dot of dots.value) {
     const ox = dot.cx + dot.xOffset
     const oy = dot.cy + dot.yOffset
+    if (!moving && (Math.abs(dot.xOffset) > 0.05 || Math.abs(dot.yOffset) > 0.05)) moving = true
     const dx = dot.cx - px
     const dy = dot.cy - py
     const dsq = dx * dx + dy * dy
@@ -183,8 +189,10 @@ const draw = () => {
     }
   }
 
-  rafId = requestAnimationFrame(draw)
+  return moving
 }
+
+const { wake } = useRenderLoop(canvasRef, draw)
 
 const onMove = (e: MouseEvent) => {
   const now = performance.now()
@@ -213,6 +221,7 @@ const onMove = (e: MouseEvent) => {
   const rect = canvas.getBoundingClientRect()
   pr.x = e.clientX - rect.left
   pr.y = e.clientY - rect.top
+  wake() // proximity colours changed, and a tween may be about to start
 
   for (const dot of dots.value) {
     const dist = Math.hypot(dot.cx - pr.x, dot.cy - pr.y)
@@ -240,6 +249,7 @@ const onMove = (e: MouseEvent) => {
 const onClick = (e: MouseEvent) => {
   const canvas = canvasRef.value
   if (!canvas) return
+  wake()
   const rect = canvas.getBoundingClientRect()
   const cx = e.clientX - rect.left
   const cy = e.clientY - rect.top
@@ -273,13 +283,13 @@ onMounted(async () => {
   await nextTick()
 
   buildGrid()
-
-  if (circlePath.value) {
-    draw()
-  }
+  wake()
 
   if ('ResizeObserver' in window) {
-    resizeObserver = new ResizeObserver(buildGrid)
+    resizeObserver = new ResizeObserver(() => {
+      buildGrid()
+      wake()
+    })
     if (wrapperRef.value) {
       resizeObserver.observe(wrapperRef.value)
     }
@@ -292,10 +302,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (rafId) {
-    cancelAnimationFrame(rafId)
-  }
-
   if (resizeObserver) {
     resizeObserver.disconnect()
   } else {
@@ -311,11 +317,6 @@ watch([() => props.dotSize, () => props.gap], () => {
 })
 
 watch([() => props.proximity, () => props.baseColor, activeRgb, baseRgb, circlePath], () => {
-  if (rafId) {
-    cancelAnimationFrame(rafId)
-  }
-  if (circlePath.value) {
-    draw()
-  }
+  wake()
 })
 </script>
