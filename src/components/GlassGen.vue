@@ -145,10 +145,15 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
         </label>
       </div>
 
-      <!-- Session history — in memory only, gone when the tab closes -->
-      <div v-if="history.length" class="glass-panel history">
+      <!-- Session history — in memory only, gone when the tab closes.
+           Collapsed by default: <details> keeps the toggle native, so it stays
+           keyboard-operable and needs no open/closed state of our own. -->
+      <details v-if="history.length" class="glass-panel history">
+        <summary class="history-summary">
+          <span class="history-label">History ({{ history.length }}) — this session only</span>
+          <span class="history-chevron" aria-hidden="true">▾</span>
+        </summary>
         <div class="history-head">
-          <span class="option-label history-label">This session only</span>
           <button type="button" class="clear-button" @click="clearHistory">Clear</button>
         </div>
         <ul class="history-list">
@@ -161,7 +166,7 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
             </button>
           </li>
         </ul>
-      </div>
+      </details>
     </div>
   </div>
 </template>
@@ -178,7 +183,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 .title {
   color: #ffffff;
   font-family: 'Tanker-Regular', sans-serif;
-  user-select: none;
 }
 
 /* Glass panel base style */
@@ -206,7 +210,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   position: relative;
   margin-bottom: 1rem;
   cursor: pointer;
-  user-select: none;
 }
 
 .password-text {
@@ -247,7 +250,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
     0 0 0 1px hsla(142, 100%, 58%, 0.4) inset,
     0 8px 32px hsla(0, 0%, 0%, 0.2);
   transition: all 0.3s ease;
-  user-select: none;
 }
 
 .glass-button:hover {
@@ -271,7 +273,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   font-weight: 500;
   color: #ffffff;
   margin-bottom: 0.5rem;
-  user-select: none;
 }
 
 .detail {
@@ -279,7 +280,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   text-align: center;
   font-size: 0.75rem;
   color: hsla(0, 0%, 100%, 0.6);
-  user-select: none;
 }
 
 /* Mode switch */
@@ -299,7 +299,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   border: none;
   border-radius: 0.75rem;
   cursor: pointer;
-  user-select: none;
   transition: all 0.3s ease;
 }
 
@@ -327,7 +326,6 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
   cursor: pointer;
   color: hsla(0, 0%, 100%, 0.9);
   transition: color 0.2s ease;
-  user-select: none;
 }
 
 .checkbox-label:hover {
@@ -362,17 +360,44 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 }
 
 /* History */
-.history-head {
+.history-summary {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Safari still paints the disclosure triangle without this. */
+.history-summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
 }
 
 .history-label {
-  margin-bottom: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: hsla(0, 0%, 100%, 0.6);
+}
+
+.history-summary:hover .history-label {
+  color: #ffffff;
+}
+
+.history-chevron {
   font-size: 0.75rem;
   color: hsla(0, 0%, 100%, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.history[open] .history-chevron {
+  transform: rotate(180deg);
 }
 
 .clear-button {
@@ -394,7 +419,7 @@ const SEPARATOR_LABELS = { '-': 'dash', '.': 'dot', _: 'underscore', ' ': 'space
 
 .history-list {
   max-height: 12rem;
-  margin: 0.75rem 0 0;
+  margin: 0.5rem 0 0;
   padding: 0;
   overflow-y: auto;
   list-style: none;

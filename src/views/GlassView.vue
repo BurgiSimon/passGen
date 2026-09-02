@@ -71,12 +71,17 @@ const emit = defineEmits(['switch-skin'])
 @import '@/fonts/satoshi/css/satoshi.css';
 
 /* The glass skin is dark-only, so it pins its own scheme instead of inheriting
-   whatever the terminal skin's theme toggle last left on <html>. */
+   whatever the terminal skin's theme toggle last left on <html>.
+   Nothing in this skin is selectable: every string is either chrome or a
+   password you copy with a click, so a drag-select is only ever an accident.
+   user-select inherits, so this one rule covers the whole skin. */
 .page-container {
   min-height: 100vh;
   width: 100%;
   background-color: #0a0a0a;
   color-scheme: dark;
+  user-select: none;
+  -webkit-user-select: none;
   position: relative;
   font-family: 'Satoshi-Variable', sans-serif;
 }
@@ -118,7 +123,6 @@ const emit = defineEmits(['switch-skin'])
   border-radius: 0.75rem;
   box-shadow: 0 0 0 1px hsla(0, 0%, 100%, 0.2) inset;
   cursor: pointer;
-  user-select: none;
   transition: all 0.3s ease;
 }
 
